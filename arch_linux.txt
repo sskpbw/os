@@ -1,0 +1,80 @@
+**arch linux installation**
+* connecting to the internet
+iwctl
+device list
+station wlan0 get-networks
+station wlan0 connect Sanjib
+* partitioning the disk
+lslk
+cfdisk /dev/sda
+/dev/sda1 - 512M - boot
+/dev/sda2 - 6G - swap
+/dev/sda3 - rest of the memory - root
+* formatting the partitions
+mkfs.ext4 /dev/sda3
+mkfs.fat -F 32 /dev/sda1
+mkswap /dev/sda2
+* mounting the file systems
+mount /dev/sda3 /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/sda1 /mnt/boot/efi
+swapon /dev/sda2
+* installing the base system
+pacstrap /mnt base base-devel linux linux-firmware sof-firmware grub efibootmgr vim networkmanager
+* generating fstab
+genfstab /mnt
+genfstab /mnt > /mnt/etc/fstab
+cat /mnt/etc/fstab
+* changing root
+arch-chroot /mnt
+* setting time
+ln -sf usr/share/zoneinfo/Asia/Dhaka /etc/localtime
+date
+hwclock --systohc
+* localization
+vim /etc/locale.gen
+en_US.UTF-8 UTF-8
+locale-gen
+vim /etc/locale.conf
+LANG=en_US.UTF-8
+* setting the hostname
+vim /etc/hostname
+machine
+* setting the root password
+passwd
+* adding a user with user password and sudo privileges
+useradd -m -G wheel -s /bin/bash sanjib
+passwd sanjib
+EDITOR=vim visudo
+%wheel ALL=(ALL) ALL
+* enabling networkmanager
+systemctl enable NetworkManager
+* setting up grub
+lsblk
+grub-install /dev/sda
+grub-mkconfig -o /boot/grub/grub.cfg
+* finishing installation
+exit (exiting the chroot)
+umount -a
+reboot
+
+**arch linux post installation tasks**
+sudo su
+nmtui
+pacman -S neofetch
+pacman -S network-manager-applet
+pacman -S xorg-server xorg-xinit
+pacman -S lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+systemctl enable lightdm
+systemctl list-unit-files --state=enabled
+pacman -S i3-gaps i3status i3lock rofi
+pacman -S pulseaudio pavucontrol
+pacman -S volctl brightnessctl
+
+**yay installation**
+sudo pacman -S git
+cd /opt
+sudo git clone https://aur.archlinux.org/yay-git.git
+sudo chown -R sanjib:sanjib ./yay-git
+cd yay-git
+makepkg -si
